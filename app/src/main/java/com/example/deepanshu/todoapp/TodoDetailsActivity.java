@@ -51,6 +51,12 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo_details);
 
+        if(reqCode == ADD_TODO){
+            setTitle("Add Todo");
+        }else{
+            setTitle("Edit Todo");
+        }
+
         todoNameEditText = (EditText) findViewById(R.id.todo_name_edittext);
         todoCategorySpinner = (Spinner) findViewById(R.id.todo_category_spinner);
         todoDateEditText = (EditText) findViewById(R.id.todo_date_edittext);
@@ -92,7 +98,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
 
         }else if(id == R.id.todo_time_edittext){
             if((yearTemp==0 || monthTemp == -1 || datetemp==-1) || todoDateEditText.getText().toString().equals("")){
-                todoTimeEditText.setError("Select Date");
+                todoDateEditText.setError("Required Field");
                 return;
             }
 

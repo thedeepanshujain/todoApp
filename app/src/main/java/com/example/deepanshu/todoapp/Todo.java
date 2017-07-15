@@ -87,6 +87,6 @@ public class Todo {
     }
 
     public String getIcon() {
-        return String.valueOf(mTodoName.charAt(0));
+        return String.valueOf(mTodoName.charAt(0)).toUpperCase();
     }
 }

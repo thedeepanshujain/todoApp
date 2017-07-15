@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     tools:conhint="com.example.deepanshu.todomanager.TodoDetailsActivity"
     tools:layout_editor_absoluteY="81dp"
-    tools:layout_editor_absoluteX="0dp">
+    tools:layout_editor_absoluteX="0dp"
+    android:background="@color/dayCardBg">
 
 
     <EditText
@@ -17,7 +18,7 @@
         android:inputType="textPersonName"
         android:hint="TODO Name"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:layout_marginLeft="0dp"
         app:layout_constraintLeft_toLeftOf="@+id/guideline" />
 

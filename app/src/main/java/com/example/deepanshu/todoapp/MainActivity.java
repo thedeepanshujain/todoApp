@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     final static int EDIT_TODO = 1;
     final static int ADD_TODO = 0;
     public static Date todayDate;
+    public static Date tomDate;
     Todo currentTodo = null;
 
     RecyclerView mTodayRecyclerView;
@@ -116,8 +117,29 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     }
 
     private void setTodayDate() {
-        todayDate = Calendar.getInstance().getTime();
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int date = calendar.get(Calendar.DATE);
+
+        calendar.set(year,month,date,0,0,0);
+
+        todayDate = calendar.getTime();
     }
+
+
+    private void setTomDate() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int date = calendar.get(Calendar.DATE);
+
+        calendar.set(year,month,date+1,0,0,0);
+
+        todayDate = calendar.getTime();
+
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -222,6 +244,8 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     }
 
     private void updateLists() {
+        setTodayDate();
+        setTomDate();
         todoList.clear();
         todayTodoArrayList.clear();
         upcomingTodoArrayList.clear();
@@ -244,24 +268,22 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
                     Date currentTodoDate = currentTodo.getTodoDate();
                     setAlarm(currentTodo);
 
-                    if(currentTodoDate.equals(todayDate)){
-
-                        int size = todayTodoArrayList.size();
-                        todayTodoArrayList.add(currentTodo);
-                        mTodayRecyclerAdapter.notifyItemInserted(size);
-
-                    }else if(currentTodoDate.before(todayDate)){
+                    if(currentTodoDate.before(todayDate)){
 
                         int size = upcomingTodoArrayList.size();
                         doneTodoArrayList.add(currentTodo);
                         mDoneRecyclerAdapter.notifyItemInserted(size);
 
-                    }else if(currentTodoDate.after(todayDate)){
+                    }else if(currentTodoDate.after(tomDate)){
 
                         int size = upcomingTodoArrayList.size();
                         upcomingTodoArrayList.add(currentTodo);
                         mUpcomingRecyclerAdapter.notifyItemInserted(size);
 
+                    }else{
+                        int size = todayTodoArrayList.size();
+                        todayTodoArrayList.add(currentTodo);
+                        mTodayRecyclerAdapter.notifyItemInserted(size);
                     }
                 }
             }
