@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by deepanshu on 14/7/17.
@@ -33,12 +34,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TodoVi
 
     @Override
     public void onBindViewHolder(TodoViewHolder holder, int position) {
-
         Todo todo = mTodoArrayList.get(position);
         holder.mTodoIconTextView.setText(todo.getIcon());
         holder.mTodoNameTextView.setText(todo.getTodoName());
-        String[] categoryArray = mContext.getResources().getStringArray(R.array.category_spinner);
-        holder.mTodoCategoryTextView.setText(categoryArray[todo.getTodoCategory()]);
+        holder.mTodoCategoryTextView.setText(todo.getTodoCategory().getCategory());
     }
 
     @Override

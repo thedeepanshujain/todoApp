@@ -10,7 +10,7 @@ import android.content.Context;
  * Created by deepanshu on 14/7/17.
  */
 
-@Database(entities = {Todo.class},version = 1,exportSchema = false)
+@Database(entities = {Todo.class,Category.class},version = 1,exportSchema = false)
 @TypeConverters({Converters.class})
 public abstract class TodoDatabase extends RoomDatabase {
 
@@ -31,4 +31,5 @@ public abstract class TodoDatabase extends RoomDatabase {
     }
 
     abstract TodoDao todoDao();
+    abstract CategoryDao categoryDao();
 }

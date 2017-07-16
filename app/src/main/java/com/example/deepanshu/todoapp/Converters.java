@@ -19,4 +19,14 @@ public class Converters {
     public static Long dateToTimestamp(Date date) {
         return date == null ? null : date.getTime();
     }
+
+    @TypeConverter
+    public static Category stringToCategory(String category){
+        return category == null ? null : new Category(category);
+    }
+
+    @TypeConverter
+    public static String categoryToString(Category category){
+        return category == null ? null : category.getCategory();
+    }
 }

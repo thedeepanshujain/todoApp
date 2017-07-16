@@ -1,5 +1,6 @@
 package com.example.deepanshu.todoapp;
 
+import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
@@ -14,14 +15,33 @@ import java.util.Date;
 public class Todo implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     private long mTodoId;
+
+    @ColumnInfo(name = "name")
     private String mTodoName;
-    private int mTodoCategory;
+
+    @ColumnInfo(name = "category")
+    private Category mTodoCategory;
+
+    @ColumnInfo(name = "date")
     private Date mTodoDate;
+
+    @ColumnInfo(name = "time")
     private long mTodoTime;
+
+    @ColumnInfo(name = "desc")
     private String mTodoDesc;
+
+    @ColumnInfo(name = "priority")
     private int mTodoPriority;
+
+    @ColumnInfo(name = "alarm")
     private boolean mTodoSetAlarm;
+
+// TODO: 16/7/17 done option for todo  
+//    @ColumnInfo(name = "done")
+//    private boolean mTodoDone;
 
     public long getTodoId() {
         return mTodoId;
@@ -39,11 +59,11 @@ public class Todo implements Serializable {
         this.mTodoName = mTodoName;
     }
 
-    public int getTodoCategory() {
+    public Category getTodoCategory() {
         return mTodoCategory;
     }
 
-    public void setTodoCategory(int mTodoCategory) {
+    public void setTodoCategory(Category mTodoCategory) {
         this.mTodoCategory = mTodoCategory;
     }
 

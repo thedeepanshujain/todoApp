@@ -15,7 +15,7 @@ import java.util.List;
 @Dao
 public interface TodoDao {
 
-    @Query("SELECT * from todo")
+    @Query("SELECT * from todo ORDER BY priority DESC")
     List<Todo> getAllTodo();
 
     @Insert
