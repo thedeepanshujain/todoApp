@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
-                intent.putExtra("reqCode",ADD_TODO);
+                intent.putExtra(IntentConstants.REQ_CODE,ADD_TODO);
                 startActivityForResult(intent,ADD_TODO);
             }
         });
@@ -127,7 +127,6 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         todayDate = calendar.getTime();
     }
 
-
     private void setTomDate() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -136,10 +135,9 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
 
         calendar.set(year,month,date+1,0,0,0);
 
-        todayDate = calendar.getTime();
+        tomDate = calendar.getTime();
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -165,7 +163,24 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
 
     @Override
     public void onItemClick(View view, int position) {
-        //TODO
+        Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
+        intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
+        intent.putExtra(IntentConstants.REQ_CODE,getArrayList(view).get(position));
+        startActivityForResult(intent,EDIT_TODO);
+    }
+
+    private ArrayList<Todo> getArrayList(View view) {
+        LinearLayout layout = (LinearLayout) view.getParent().getParent();
+        int layoutId = layout.getId();
+
+        if(layoutId == R.id.today_linear_layout){
+            return todayTodoArrayList;
+        }else if(layoutId == R.id.upcoming_linear_layout){
+            return upcomingTodoArrayList;
+        }else if(layoutId == R.id.done_linear_layout){
+            return doneTodoArrayList;
+        }
+        return null;
     }
 
     @Override

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TimeFormatException;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -35,7 +36,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
 
     private int yearTemp = 0;
     private int monthTemp = -1;
-    private int datetemp = -1;
+    private int dateTemp = -1;
 
     EditText todoNameEditText;
     Spinner todoCategorySpinner;
@@ -67,15 +68,24 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
         submitButton = (Button) findViewById(R.id.todo_submit_button);
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,R.array.category_spinner,android.R.layout.simple_spinner_item);
-//        adapter.add("");
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         todoCategorySpinner.setAdapter(adapter);
 
         Intent intent = getIntent();
-        reqCode = intent.getIntExtra("reqCode",-1);
+        reqCode = intent.getIntExtra(IntentConstants.REQ_CODE,-1);
 
         if(reqCode==EDIT_TODO){
-            //TODO
+            caseTodo = (Todo) intent.getSerializableExtra(IntentConstants.TODO);
+            todoNameEditText.setText(caseTodo.getTodoName());
+            todoCategorySpinner.setSelection(caseTodo.getTodoCategory());
+
+            DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+            String dateString = dateFormat.format(caseTodo.getTodoDate());
+            todoDateEditText.setText(dateString);
+
+            DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+            String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
+            todoTimeEditText.setText(timeString);
         }else if(reqCode == ADD_TODO) {
             caseTodo = new Todo();
         }
@@ -97,7 +107,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             showDatePicker(this,year,month,date);
 
         }else if(id == R.id.todo_time_edittext){
-            if((yearTemp==0 || monthTemp == -1 || datetemp==-1) || todoDateEditText.getText().toString().equals("")){
+            if((yearTemp==0 || monthTemp == -1 || dateTemp==-1) || todoDateEditText.getText().toString().equals("")){
                 todoDateEditText.setError("Required Field");
                 return;
             }
@@ -113,11 +123,21 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                 todoNameEditText.setError("Required field");
                 return;
             }
+
+            if(todoDateEditText.getText().toString().equals("")){
+                todoDateEditText.setError("Required field");
+                return;
+            }
+
+            if(todoTimeEditText.getText().toString().equals("")){
+                setTime(0,0);
+            }
+
             caseTodo.setTodoName(name);
             //TODO category work
             caseTodo.setTodoDesc(todoDescEditText.getText().toString());
             caseTodo.setTodoSetAlarm(todoAlarmSwitch.isChecked());
-            todoPriorityRatingBar.getRating();
+
 
             Intent intent = new Intent(TodoDetailsActivity.this,MainActivity.class);
 
@@ -144,9 +164,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             setResult(RESULT_OK,intent);
             finish();
         }
-
     }
-
 
     private void showDatePicker(Context context, int initialYear, int initialMonth,
                                 int initialDate) {
@@ -157,7 +175,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                 calendar.set(year,month,dayOfMonth);
                 yearTemp = year;
                 monthTemp = month;
-                datetemp = dayOfMonth;
+                dateTemp = dayOfMonth;
 
                 caseTodo.setTodoDate(calendar.getTime());
 
@@ -174,16 +192,19 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
         TimePickerDialog timePickerDialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.set(yearTemp,monthTemp,datetemp,hourOfDay,minute);
-                caseTodo.setTodoTime(calendar.getTimeInMillis());
-                DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
-                String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
-                todoTimeEditText.setText(timeString);
+                setTime(hourOfDay,minute);
             }
         }, initialHour, initialMin, false);
 
         timePickerDialog.show();
     }
 
+    public void setTime(int hourOfDay, int minute) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(yearTemp,monthTemp,dateTemp,hourOfDay,minute);
+        caseTodo.setTodoTime(calendar.getTimeInMillis());
+        DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+        String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
+        todoTimeEditText.setText(timeString);
+    }
 }

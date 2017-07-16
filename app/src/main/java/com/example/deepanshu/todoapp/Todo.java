@@ -3,6 +3,7 @@ package com.example.deepanshu.todoapp;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -10,12 +11,12 @@ import java.util.Date;
  */
 
 @Entity (tableName = "todo")
-public class Todo {
+public class Todo implements Serializable {
 
     @PrimaryKey(autoGenerate = true)
     private long mTodoId;
     private String mTodoName;
-    private String mTodoCategory;
+    private int mTodoCategory;
     private Date mTodoDate;
     private long mTodoTime;
     private String mTodoDesc;
@@ -38,11 +39,11 @@ public class Todo {
         this.mTodoName = mTodoName;
     }
 
-    public String getTodoCategory() {
+    public int getTodoCategory() {
         return mTodoCategory;
     }
 
-    public void setTodoCategory(String mTodoCategory) {
+    public void setTodoCategory(int mTodoCategory) {
         this.mTodoCategory = mTodoCategory;
     }
 
