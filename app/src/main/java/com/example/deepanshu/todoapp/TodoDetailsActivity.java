@@ -29,6 +29,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
 
     final static int ADD_TODO = 0;
     final static int EDIT_TODO = 1;
+    final static int OTHERS_POS = 3;
 
     Todo caseTodo;
     int position;
@@ -80,12 +81,22 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             todoCategorySpinner.setSelection(caseTodo.getTodoCategory());
 
             DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(caseTodo.getTodoDate());
+            yearTemp = calendar.get(Calendar.YEAR);
+            monthTemp = calendar.get(Calendar.MONTH);
+            dateTemp = calendar.get(Calendar.DATE);
             String dateString = dateFormat.format(caseTodo.getTodoDate());
             todoDateEditText.setText(dateString);
 
             DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
             String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
             todoTimeEditText.setText(timeString);
+
+            todoAlarmSwitch.setChecked(caseTodo.isTodoSetAlarm());
+            todoDescEditText.setText(caseTodo.getTodoDesc());
+            todoPriorityRatingBar.setRating(caseTodo.getTodoPriority());
+
         }else if(reqCode == ADD_TODO) {
             caseTodo = new Todo();
         }
@@ -134,7 +145,12 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             }
 
             caseTodo.setTodoName(name);
-            //TODO category work
+            if(todoCategorySpinner.getSelectedItemPosition() == 0 ){
+                caseTodo.setTodoCategory(OTHERS_POS);
+            }else{
+                caseTodo.setTodoCategory(todoCategorySpinner.getSelectedItemPosition());
+            }
+
             caseTodo.setTodoDesc(todoDescEditText.getText().toString());
             caseTodo.setTodoSetAlarm(todoAlarmSwitch.isChecked());
 
@@ -158,7 +174,20 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                     }
                 }.execute();
             }else if(reqCode==EDIT_TODO){
-                //TODO
+                TodoDatabase database = TodoDatabase.getInstance(this);
+                final TodoDao dao = database.todoDao();
+                new AsyncTask<Void,Void,Void>(){
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        dao.updateDb(caseTodo);
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                    }
+                }.execute();
             }
 
             setResult(RESULT_OK,intent);

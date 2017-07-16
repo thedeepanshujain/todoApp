@@ -37,7 +37,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.TodoVi
         Todo todo = mTodoArrayList.get(position);
         holder.mTodoIconTextView.setText(todo.getIcon());
         holder.mTodoNameTextView.setText(todo.getTodoName());
-        holder.mTodoCategoryTextView.setText(todo.getTodoCategory());
+        String[] categoryArray = mContext.getResources().getStringArray(R.array.category_spinner);
+        holder.mTodoCategoryTextView.setText(categoryArray[todo.getTodoCategory()]);
     }
 
     @Override

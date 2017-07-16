@@ -26,7 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ItemClickListener {
+public class MainActivity extends AppCompatActivity {
 
     final static int EDIT_TODO = 1;
     final static int ADD_TODO = 0;
@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        setTodayDate();
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -74,9 +73,43 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         upcomingTodoArrayList = new ArrayList<>();
         doneTodoArrayList = new ArrayList<>();
 
-        mTodayRecyclerAdapter = new RecyclerAdapter(this,todayTodoArrayList,this);
-        mUpcomingRecyclerAdapter = new RecyclerAdapter(this,upcomingTodoArrayList,this);
-        mDoneRecyclerAdapter = new RecyclerAdapter(this,doneTodoArrayList,this);
+        mTodayRecyclerAdapter = new RecyclerAdapter(this, todayTodoArrayList, new ItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                showDailog(todayTodoArrayList.get(position));
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+                todayTodoArrayList.remove(position);
+                mTodayRecyclerAdapter.notifyItemRemoved(position);
+
+            }
+        });
+        mUpcomingRecyclerAdapter = new RecyclerAdapter(this, upcomingTodoArrayList, new ItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                showDailog(upcomingTodoArrayList.get(position));
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+                upcomingTodoArrayList.remove(position);
+                mUpcomingRecyclerAdapter.notifyItemRemoved(position);
+            }
+        });
+        mDoneRecyclerAdapter = new RecyclerAdapter(this, doneTodoArrayList, new ItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                doneTodoArrayList.get(position);
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+                doneTodoArrayList.remove(position);
+                mDoneRecyclerAdapter.notifyItemRemoved(position);
+            }
+        });
 
         mTodayRecyclerView.setAdapter(mTodayRecyclerAdapter);
         mUpComingRecyclerView.setAdapter(mUpcomingRecyclerAdapter);
@@ -94,9 +127,8 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         mUpComingRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mDoneRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
-                ItemTouchHelper.LEFT|ItemTouchHelper.RIGHT, ItemTouchHelper.DOWN|ItemTouchHelper.UP) {
+        ItemTouchHelper todayItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP, ItemTouchHelper.DOWN) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                                   RecyclerView.ViewHolder target) {
@@ -105,37 +137,54 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                //TODO
+                int position = viewHolder.getAdapterPosition();
+                todayTodoArrayList.remove(position);
+                mTodayRecyclerAdapter.notifyItemRemoved(position);
             }
         });
-        itemTouchHelper.attachToRecyclerView(mTodayRecyclerView);
-        itemTouchHelper.attachToRecyclerView(mUpComingRecyclerView);
-        itemTouchHelper.attachToRecyclerView(mDoneRecyclerView);
+
+        ItemTouchHelper upcomingItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP, ItemTouchHelper.DOWN) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                                  RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                upcomingTodoArrayList.remove(position);
+                mUpcomingRecyclerAdapter.notifyItemRemoved(position);
+            }
+        });
+
+        ItemTouchHelper doneItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP, ItemTouchHelper.DOWN) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                doneTodoArrayList.remove(position);
+                mDoneRecyclerAdapter.notifyItemRemoved(position);
+            }
+        });
+
+        todayItemTouchHelper.attachToRecyclerView(mTodayRecyclerView);
+        upcomingItemTouchHelper.attachToRecyclerView(mUpComingRecyclerView);
+        doneItemTouchHelper.attachToRecyclerView(mDoneRecyclerView);
 
         updateLists();
-
     }
 
-    private void setTodayDate() {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int date = calendar.get(Calendar.DATE);
+    private void showDailog(Todo todo) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        calendar.set(year,month,date,0,0,0);
-
-        todayDate = calendar.getTime();
-    }
-
-    private void setTomDate() {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int date = calendar.get(Calendar.DATE);
-
-        calendar.set(year,month,date+1,0,0,0);
-
-        tomDate = calendar.getTime();
+        builder.setTitle(todo.getTodoName());
 
     }
 
@@ -159,91 +208,6 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onItemClick(View view, int position) {
-        Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
-        intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
-        intent.putExtra(IntentConstants.REQ_CODE,getArrayList(view).get(position));
-        startActivityForResult(intent,EDIT_TODO);
-    }
-
-    private ArrayList<Todo> getArrayList(View view) {
-        LinearLayout layout = (LinearLayout) view.getParent().getParent();
-        int layoutId = layout.getId();
-
-        if(layoutId == R.id.today_linear_layout){
-            return todayTodoArrayList;
-        }else if(layoutId == R.id.upcoming_linear_layout){
-            return upcomingTodoArrayList;
-        }else if(layoutId == R.id.done_linear_layout){
-            return doneTodoArrayList;
-        }
-        return null;
-    }
-
-    @Override
-    public void onItemLongClick(final View view, final int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-
-        builder.setTitle("Delete");
-        builder.setCancelable(false);
-        builder.setMessage("Are you sure you want to remove this task ?");
-
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                removeTodo(view,position);
-            }
-        });
-
-        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                dialogInterface.dismiss();
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-    private void removeTodo(View view, int position) {
-        LinearLayout layout = (LinearLayout) view.getParent().getParent();
-        int layoutId = layout.getId();
-
-
-        if(layoutId == R.id.today_linear_layout){
-            currentTodo = todayTodoArrayList.get(position);
-            todayTodoArrayList.remove(position);
-            mTodayRecyclerAdapter.notifyItemRemoved(position);
-
-        }else if(layoutId == R.id.upcoming_linear_layout){
-            currentTodo = upcomingTodoArrayList.get(position);
-            upcomingTodoArrayList.remove(position);
-            mUpcomingRecyclerAdapter.notifyItemRemoved(position);
-
-        }else if(layoutId == R.id.done_linear_layout){
-            currentTodo = doneTodoArrayList.get(position);
-            doneTodoArrayList.remove(position);
-            mDoneRecyclerAdapter.notifyItemRemoved(position);
-        }
-
-        TodoDatabase database = TodoDatabase.getInstance(this);
-        final TodoDao dao = database.todoDao();
-        new AsyncTask<Void,Void,Void>(){
-            @Override
-            protected Void doInBackground(Void... params) {
-                dao.deleteFromDb(currentTodo);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-            }
-        }.execute();
     }
 
     @Override
@@ -308,4 +272,28 @@ public class MainActivity extends AppCompatActivity implements ItemClickListener
     private void setAlarm(Todo currentTodo) {
         //TODO
     }
+
+    private void setTodayDate() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int date = calendar.get(Calendar.DATE);
+
+        calendar.set(year,month,date,0,0,0);
+
+        todayDate = calendar.getTime();
+    }
+
+    private void setTomDate() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int date = calendar.get(Calendar.DATE);
+
+        calendar.set(year,month,date+1,0,0,0);
+
+        tomDate = calendar.getTime();
+
+    }
+
 }
