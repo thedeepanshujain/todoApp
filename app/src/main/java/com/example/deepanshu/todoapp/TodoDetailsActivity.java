@@ -32,9 +32,9 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
     final static int ADD_TODO = 0;
     final static int EDIT_TODO = 1;
 
-
-    ArrayAdapter<CharSequence> adapter;
-    List<Category> categoryList = new ArrayList<>();
+    ArrayAdapter<String> adapter;
+    List<Category> categoryList;
+    List<String> categoryStringList;
     TodoDao todoDao;
     CategoryDao categoryDao;
     Todo caseTodo;
@@ -73,62 +73,74 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
         todoPriorityRatingBar = (RatingBar) findViewById(R.id.todo_priority_ratingbar);
         submitButton = (Button) findViewById(R.id.todo_submit_button);
 
-        adapter = ArrayAdapter.createFromResource(this,R.array.category_spinner,android.R.layout.simple_spinner_item);
-//        TodoDatabase database = TodoDatabase.getInstance(this);
-//        categoryDao = database.categoryDao();
-//        new AsyncTask<Void,Void,Void>(){
-//
-//            @Override
-//            protected Void doInBackground(Void... params) {
-//                categoryList = categoryDao.getAllCategories();
-//                return null;
-//            }
-//
-//            @Override
-//            protected void onPostExecute(Void aVoid) {
-//                for(int i=0;i<categoryList.size();i++){
-//                    adapter.add(categoryList.get(i).getCategory());
-//                    adapter.notifyDataSetChanged();
-//                }
-//
-//            }
-//        }.execute();
-        //temp work
-        String[] array = getResources().getStringArray(R.array.category_spinner);
-        for(int i=0;i<array.length;i++){
-            categoryList.add(new Category(array[i]));
-        }
-
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        todoCategorySpinner.setAdapter(adapter);
-
+        categoryList = new ArrayList<>();
+        categoryStringList = new ArrayList<>();
         Intent intent = getIntent();
         reqCode = intent.getIntExtra(IntentConstants.REQ_CODE,-1);
 
+        adapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,categoryStringList);
+        TodoDatabase database = TodoDatabase.getInstance(this);
+        categoryDao = database.categoryDao();
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                categoryList.clear();
+                categoryList.addAll(categoryDao.getAllCategories());
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                for(int i=0;i<categoryList.size();i++){
+                    adapter.add(categoryList.get(i).getCategory());
+                }
+                adapter.notifyDataSetChanged();
+            }
+        }.execute();
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        todoCategorySpinner.setAdapter(adapter);
+
         if(reqCode==EDIT_TODO){
-            caseTodo = (Todo) intent.getSerializableExtra(IntentConstants.TODO);
-            todoNameEditText.setText(caseTodo.getTodoName());
-            //got caseTodo category position from categorylist
-            int index = categoryList.indexOf(caseTodo.getTodoCategory());
-            todoCategorySpinner.setSelection(index,true);
+            final long id = intent.getLongExtra(IntentConstants.TODO,-1);
+            TodoDatabase todoDatabase = TodoDatabase.getInstance(this);
+            todoDao = todoDatabase.todoDao();
+            new AsyncTask<Void,Void,Void>(){
+                @Override
+                protected Void doInBackground(Void... params) {
+                    caseTodo = todoDao.getTodoById(id);
+                    return null;
+                }
 
-            DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(caseTodo.getTodoDate());
-            yearTemp = calendar.get(Calendar.YEAR);
-            monthTemp = calendar.get(Calendar.MONTH);
-            dateTemp = calendar.get(Calendar.DATE);
-            String dateString = dateFormat.format(caseTodo.getTodoDate());
-            todoDateEditText.setText(dateString);
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    super.onPostExecute(aVoid);
 
-            DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
-            String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
-            todoTimeEditText.setText(timeString);
+                    todoNameEditText.setText(caseTodo.getTodoName());
+                    //got caseTodo category position from categorylist
+                    int index = categoryList.indexOf(caseTodo.getTodoCategory());
+                    todoCategorySpinner.setSelection(index);
 
-            todoAlarmSwitch.setChecked(caseTodo.isTodoSetAlarm());
-            todoDescEditText.setText(caseTodo.getTodoDesc());
-            todoPriorityRatingBar.setRating(caseTodo.getTodoPriority());
+                    DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(caseTodo.getTodoDate());
+                    yearTemp = calendar.get(Calendar.YEAR);
+                    monthTemp = calendar.get(Calendar.MONTH);
+                    dateTemp = calendar.get(Calendar.DATE);
+                    String dateString = dateFormat.format(caseTodo.getTodoDate());
+                    todoDateEditText.setText(dateString);
+
+                    DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+                    String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
+                    todoTimeEditText.setText(timeString);
+
+                    todoAlarmSwitch.setChecked(caseTodo.isTodoSetAlarm());
+                    todoDescEditText.setText(caseTodo.getTodoDesc());
+                    todoPriorityRatingBar.setRating(caseTodo.getTodoPriority());
+
+                }
+            }.execute();
 
         }else if(reqCode == ADD_TODO) {
             caseTodo = new Todo();
@@ -180,17 +192,15 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             caseTodo.setTodoName(name);
 
             int categoryPosition = todoCategorySpinner.getSelectedItemPosition();
-            if(categoryPosition == 0 ){
-                Category category = new Category(DbConstants.CATEGORY_OTHERS);
-                caseTodo.setTodoCategory(category);
+            if(categoryList.get(categoryPosition).getCategory().equals(DbConstants.CATEGORY_CHOOSE)){
+                int index = categoryStringList.indexOf(DbConstants.CATEGORY_OTHERS);
+                caseTodo.setTodoCategory(categoryList.get(index));
             }else{
                 caseTodo.setTodoCategory(categoryList.get(categoryPosition));
             }
-
             caseTodo.setTodoDesc(todoDescEditText.getText().toString());
             caseTodo.setTodoSetAlarm(todoAlarmSwitch.isChecked());
-
-            Intent intent = new Intent(TodoDetailsActivity.this,MainActivity.class);
+            caseTodo.setTodoPriority((int) todoPriorityRatingBar.getRating());
 
             if(reqCode==ADD_TODO){
                 TodoDatabase database = TodoDatabase.getInstance(this);
@@ -201,6 +211,12 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                     protected Void doInBackground(Void... params) {
                         todoDao.insertInDb(caseTodo);
                         return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        setResult(RESULT_OK);
+                        finish();
                     }
                 }.execute();
             }
@@ -213,11 +229,14 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                         todoDao.updateDb(caseTodo);
                         return null;
                     }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        setResult(RESULT_OK);
+                        finish();
+                    }
                 }.execute();
             }
-
-            setResult(RESULT_OK,intent);
-            finish();
         }
     }
 

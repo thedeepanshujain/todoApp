@@ -12,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatRatingBar;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
     public final static int ADD_TODO = 0;
     public static Date todayDate;
     public static Date tomDate;
-
+    TodoDao todoDao;
+    CategoryDao categoryDao;
     RecyclerView mTodayRecyclerView;
     RecyclerView mUpComingRecyclerView;
     RecyclerView mDoneRecyclerView;
@@ -61,33 +63,34 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        SharedPreferences appData = getSharedPreferences("todo_shared_preference",MODE_PRIVATE);
-//        boolean isFirstTime = appData.getBoolean("isFirstTime",true);
-//
-//        Log.i("TAG", "onCreate: " + appData.getBoolean("isFirstTime",true));
-//        if(appData.getBoolean("isFirstTime",true)){
-//            appData.edit().putBoolean("isFirstTime",false);
-//
-//            TodoDatabase database = TodoDatabase.getInstance(this);
-//            final CategoryDao dao = database.categoryDao();
-//            new AsyncTask<Void,Void,Void>(){
-//                @Override
-//                protected Void doInBackground(Void... params) {
-//                    dao.newCat(new Category("Select Category"));
-//                    dao.newCat(new Category("Personal"));
-//                    dao.newCat(new Category("Work"));
-//                    dao.newCat(new Category("Others"));
-//                    // TODO: 16/7/17 custom category work
-//                    //dao.newCat("Custom");
-//                    return null;
-//                }
-//
-//                @Override
-//                protected void onPostExecute(Void aVoid) {
-//                    super.onPostExecute(aVoid);
-//                }
-//            }.execute();
-//        }
+        SharedPreferences appData = getSharedPreferences("todo_shared_preference",MODE_PRIVATE);
+        boolean isFirstTime = appData.getBoolean("isFirstTime",true);
+
+        if(isFirstTime){
+//            SharedPreferences.Editor editor = appData.edit();
+            appData.edit().putBoolean("isFirstTime",false).commit();
+            Log.i("TAG", "onCreate: " +appData.getBoolean("isFirstTime",true) );
+
+            TodoDatabase database = TodoDatabase.getInstance(this);
+            categoryDao = database.categoryDao();
+            new AsyncTask<Void,Void,Void>(){
+                @Override
+                protected Void doInBackground(Void... params) {
+                    categoryDao.newCat(new Category(DbConstants.CATEGORY_CHOOSE));
+                    categoryDao.newCat(new Category(DbConstants.CATEGORY_PERSONAL));
+                    categoryDao.newCat(new Category(DbConstants.CATEGORY_WORK));
+                    categoryDao.newCat(new Category(DbConstants.CATEGORY_OTHERS));
+                    // TODO: 16/7/17 custom category work
+                    //dao.newCat("Custom");
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    super.onPostExecute(aVoid);
+                }
+            }.execute();
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -160,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
         mDoneRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
         ItemTouchHelper todayItemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP, ItemTouchHelper.DOWN|ItemTouchHelper.UP) {
+               new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP,ItemTouchHelper.DOWN|ItemTouchHelper.UP) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
                                   RecyclerView.ViewHolder target) {
@@ -169,12 +172,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                removeTodayTodo(viewHolder.getAdapterPosition());
+                if(direction == ItemTouchHelper.UP){
+                    editTodayTodo(viewHolder.getAdapterPosition());
+                }else if(direction == ItemTouchHelper.DOWN) {
+                    removeTodayTodo(viewHolder.getAdapterPosition());
+                }
             }
         });
 
         ItemTouchHelper upcomingItemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP, ItemTouchHelper.DOWN|ItemTouchHelper.UP) {
+               new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP,ItemTouchHelper.DOWN|ItemTouchHelper.UP) {
 
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
@@ -184,12 +191,16 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                removeUpcomingTodo(viewHolder.getAdapterPosition());
+                if(direction == ItemTouchHelper.UP){
+                    editUpcomingTodo(viewHolder.getAdapterPosition());
+                }else if(direction == ItemTouchHelper.DOWN) {
+                    removeUpcomingTodo(viewHolder.getAdapterPosition());
+                }
             }
         });
 
         ItemTouchHelper doneItemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP, ItemTouchHelper.DOWN|ItemTouchHelper.UP){
+                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP,ItemTouchHelper.DOWN|ItemTouchHelper.UP){
 
             @Override
             public boolean onMove(RecyclerView recyclerView,RecyclerView.ViewHolder viewHolder,
@@ -199,7 +210,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                removeDoneTodo(viewHolder.getAdapterPosition());
+                if(direction == ItemTouchHelper.UP){
+                    editDoneTodo(viewHolder.getAdapterPosition());
+                }else if(direction == ItemTouchHelper.DOWN) {
+                    removeDoneTodo(viewHolder.getAdapterPosition());
+                }
             }
         });
 
@@ -217,23 +232,14 @@ public class MainActivity extends AppCompatActivity {
         builder.setCancelable(false);
 
         View view = getLayoutInflater().inflate(R.layout.dailog_view,null);
-        TextView dialogCat = (TextView) findViewById(R.id.dialog_category);
-        TextView dialogDesc = (TextView) findViewById(R.id.dialog_desc);
-        TextView dialogDate = (TextView) findViewById(R.id.dialog_date);
-        TextView dialogTime = (TextView) findViewById(R.id.dialog_time);
-        RatingBar dialogPriority = (RatingBar) findViewById(R.id.dialog_priority);
-        SwitchCompat dialogSwitch = (SwitchCompat) findViewById(R.id.dialog_alarm);
+        TextView dialogCat = (TextView) view.findViewById(R.id.dialog_category);
+        TextView dialogDesc = (TextView) view.findViewById(R.id.dialog_desc);
+        TextView dialogDate = (TextView) view.findViewById(R.id.dialog_date);
+        TextView dialogTime = (TextView) view.findViewById(R.id.dialog_time);
+        AppCompatRatingBar dialogPriority = (AppCompatRatingBar) view.findViewById(R.id.dialog_priority);
+        SwitchCompat dialogSwitch = (SwitchCompat) view.findViewById(R.id.dialog_alarm);
 
-        Log.i("TAG", "showDialog: " + view);
-        Log.i("TAG", "showDialog: " + dialogCat);
-        Log.i("TAG", "showDialog: " + dialogDesc);
-        Log.i("TAG", "showDialog: " + dialogDate);
-        Log.i("TAG", "showDialog: " + dialogTime);
-        Log.i("TAG", "showDialog: " + dialogPriority);
-        Log.i("TAG", "showDialog: " + dialogSwitch);
-
-
-        dialogCat.setText(todo.getTodoCategory().getCategory());
+        dialogCat.setText("    "+todo.getTodoCategory().getCategory());
         dialogDesc.setText(todo.getTodoDesc());
 
         DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
@@ -261,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
                 intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
-                intent.putExtra(IntentConstants.TODO,todo);
+                intent.putExtra(IntentConstants.TODO,todo.getTodoId());
                 startActivityForResult(intent,EDIT_TODO);
             }
         });
@@ -311,15 +317,18 @@ public class MainActivity extends AppCompatActivity {
         setTomDate();
         todoList.clear();
         todayTodoArrayList.clear();
+        mTodayRecyclerAdapter.notifyDataSetChanged();
         upcomingTodoArrayList.clear();
+        mUpcomingRecyclerAdapter.notifyDataSetChanged();
         doneTodoArrayList.clear();
+        mDoneRecyclerAdapter.notifyDataSetChanged();
 
         TodoDatabase database = TodoDatabase.getInstance(this);
-        final TodoDao dao = database.todoDao();
+        todoDao = database.todoDao();
         new AsyncTask<Void,Void,Void>(){
             @Override
             protected Void doInBackground(Void... params) {
-                todoList = dao.getAllTodo();
+                todoList = todoDao.getAllTodo();
                 return null;
             }
 
@@ -389,6 +398,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("NO", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                mUpcomingRecyclerAdapter.notifyItemChanged(position);
                 dialog.dismiss();
             }
         });
@@ -397,19 +407,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 TodoDatabase database = TodoDatabase.getInstance(MainActivity.this);
-                final TodoDao dao = database.todoDao();
+                todoDao = database.todoDao();
                 new AsyncTask<Void,Void,Void>(){
                     @Override
                     protected Void doInBackground(Void... params) {
                         Todo todo = doneTodoArrayList.get(position);
-                        dao.deleteFromDb(todo);
+                        todoDao.deleteFromDb(todo);
                         return null;
                     }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        doneTodoArrayList.remove(position);
+                        mDoneRecyclerAdapter.notifyItemRemoved(position);
+                    }
                 }.execute();
-
-                doneTodoArrayList.remove(position);
-                mDoneRecyclerAdapter.notifyItemRemoved(position);
-
             }
         });
 
@@ -427,6 +440,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("NO", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                mUpcomingRecyclerAdapter.notifyItemChanged(position);
                 dialog.dismiss();
             }
         });
@@ -435,19 +449,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 TodoDatabase database = TodoDatabase.getInstance(MainActivity.this);
-                final TodoDao dao = database.todoDao();
+                todoDao = database.todoDao();
                 new AsyncTask<Void,Void,Void>(){
                     @Override
                     protected Void doInBackground(Void... params) {
                         Todo todo = upcomingTodoArrayList.get(position);
-                        dao.deleteFromDb(todo);
+                        todoDao.deleteFromDb(todo);
                         return null;
                     }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        upcomingTodoArrayList.remove(position);
+                        mUpcomingRecyclerAdapter.notifyItemRemoved(position);
+                    }
                 }.execute();
-
-                upcomingTodoArrayList.remove(position);
-                mUpcomingRecyclerAdapter.notifyItemRemoved(position);
-
             }
         });
 
@@ -466,6 +483,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("NO", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                mTodayRecyclerAdapter.notifyItemChanged(position);
                 dialog.dismiss();
             }
         });
@@ -474,24 +492,190 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 TodoDatabase database = TodoDatabase.getInstance(MainActivity.this);
-                final TodoDao dao = database.todoDao();
+                todoDao = database.todoDao();
                 new AsyncTask<Void,Void,Void>(){
                     @Override
                     protected Void doInBackground(Void... params) {
                         Todo todo = todayTodoArrayList.get(position);
-                        dao.deleteFromDb(todo);
+                        todoDao.deleteFromDb(todo);
                         return null;
                     }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        todayTodoArrayList.remove(position);
+                        mTodayRecyclerAdapter.notifyItemRemoved(position);
+                    }
                 }.execute();
-
-                todayTodoArrayList.remove(position);
-                mTodayRecyclerAdapter.notifyItemRemoved(position);
-
             }
         });
 
         AlertDialog dialog = builder.create();
         dialog.show();
+
+    }
+
+    private void editTodayTodo(final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final Todo todo = todayTodoArrayList.get(position);
+        builder.setTitle(todo.getTodoName());
+        builder.setCancelable(false);
+
+        View view = getLayoutInflater().inflate(R.layout.dailog_view,null);
+        TextView dialogCat = (TextView) view.findViewById(R.id.dialog_category);
+        TextView dialogDesc = (TextView) view.findViewById(R.id.dialog_desc);
+        TextView dialogDate = (TextView) view.findViewById(R.id.dialog_date);
+        TextView dialogTime = (TextView) view.findViewById(R.id.dialog_time);
+        AppCompatRatingBar dialogPriority = (AppCompatRatingBar) view.findViewById(R.id.dialog_priority);
+        SwitchCompat dialogSwitch = (SwitchCompat) view.findViewById(R.id.dialog_alarm);
+
+        dialogCat.setText("    "+todo.getTodoCategory().getCategory());
+        dialogDesc.setText(todo.getTodoDesc());
+
+        DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        String dateString = dateFormat.format(todo.getTodoDate());
+        dialogDate.setText(dateString);
+
+        DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+        String timeString = timeFormat.format(new Date(todo.getTodoTime()));
+        dialogTime.setText(timeString);
+
+        dialogPriority.setRating(todo.getTodoPriority());
+        dialogSwitch.setChecked(todo.isTodoSetAlarm());
+
+        builder.setView(view);
+
+        builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mTodayRecyclerAdapter.notifyItemChanged(position);
+                dialog.dismiss();
+            }
+        });
+
+        builder.setNegativeButton("EDIT", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
+                intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
+                intent.putExtra(IntentConstants.TODO,todo.getTodoId());
+                startActivityForResult(intent,EDIT_TODO);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+
+    }
+
+    private void editUpcomingTodo(final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        final Todo todo = upcomingTodoArrayList.get(position);
+        builder.setTitle(todo.getTodoName());
+        builder.setCancelable(false);
+
+        View view = getLayoutInflater().inflate(R.layout.dailog_view,null);
+        TextView dialogCat = (TextView) view.findViewById(R.id.dialog_category);
+        TextView dialogDesc = (TextView) view.findViewById(R.id.dialog_desc);
+        TextView dialogDate = (TextView) view.findViewById(R.id.dialog_date);
+        TextView dialogTime = (TextView) view.findViewById(R.id.dialog_time);
+        AppCompatRatingBar dialogPriority = (AppCompatRatingBar) view.findViewById(R.id.dialog_priority);
+        SwitchCompat dialogSwitch = (SwitchCompat) view.findViewById(R.id.dialog_alarm);
+
+        dialogCat.setText("    "+todo.getTodoCategory().getCategory());
+        dialogDesc.setText(todo.getTodoDesc());
+
+        DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        String dateString = dateFormat.format(todo.getTodoDate());
+        dialogDate.setText(dateString);
+
+        DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+        String timeString = timeFormat.format(new Date(todo.getTodoTime()));
+        dialogTime.setText(timeString);
+
+        dialogPriority.setRating(todo.getTodoPriority());
+        dialogSwitch.setChecked(todo.isTodoSetAlarm());
+
+        builder.setView(view);
+
+        builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mUpcomingRecyclerAdapter.notifyItemChanged(position);
+                dialog.dismiss();
+            }
+        });
+
+        builder.setNegativeButton("EDIT", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
+                intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
+                intent.putExtra(IntentConstants.TODO,todo.getTodoId());
+                startActivityForResult(intent,EDIT_TODO);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+
+    }
+
+    private void editDoneTodo(final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final Todo todo = doneTodoArrayList.get(position);
+        builder.setTitle(todo.getTodoName());
+        builder.setCancelable(false);
+
+        View view = getLayoutInflater().inflate(R.layout.dailog_view,null);
+        TextView dialogCat = (TextView) view.findViewById(R.id.dialog_category);
+        TextView dialogDesc = (TextView) view.findViewById(R.id.dialog_desc);
+        TextView dialogDate = (TextView) view.findViewById(R.id.dialog_date);
+        TextView dialogTime = (TextView) view.findViewById(R.id.dialog_time);
+        AppCompatRatingBar dialogPriority = (AppCompatRatingBar) view.findViewById(R.id.dialog_priority);
+        SwitchCompat dialogSwitch = (SwitchCompat) view.findViewById(R.id.dialog_alarm);
+
+        dialogCat.setText("    "+todo.getTodoCategory().getCategory());
+        dialogDesc.setText(todo.getTodoDesc());
+
+        DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
+        String dateString = dateFormat.format(todo.getTodoDate());
+        dialogDate.setText(dateString);
+
+        DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
+        String timeString = timeFormat.format(new Date(todo.getTodoTime()));
+        dialogTime.setText(timeString);
+
+        dialogPriority.setRating(todo.getTodoPriority());
+        dialogSwitch.setChecked(todo.isTodoSetAlarm());
+
+        builder.setView(view);
+
+        builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mDoneRecyclerAdapter.notifyItemChanged(position);
+                dialog.dismiss();
+            }
+        });
+
+        builder.setNegativeButton("EDIT", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
+                intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
+                intent.putExtra(IntentConstants.TODO,todo.getTodoId());
+                startActivityForResult(intent,EDIT_TODO);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
 
     }
 

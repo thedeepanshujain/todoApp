@@ -21,4 +21,12 @@
         <item name="colorAccent">#FFFFFF</item>
     </style>
 
+    <style name="AppTheme.SwitchTheme">
+        <item name="colorAccent">@color/teal</item>
+    </style>
+
+    <style name="AppTheme.RatingBarTheme">
+        <item name="colorAccent">@color/teal</item>
+    </style>
+
 </resources>

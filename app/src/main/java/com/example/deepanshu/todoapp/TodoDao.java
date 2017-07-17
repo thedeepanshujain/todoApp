@@ -18,6 +18,9 @@ public interface TodoDao {
     @Query("SELECT * from todo ORDER BY priority DESC")
     List<Todo> getAllTodo();
 
+    @Query("SELECT * FROM todo WHERE ID = :id")
+    Todo getTodoById(long id);
+
     @Insert
     void insertInDb(Todo todo);
 
