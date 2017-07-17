@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.TimeFormatException;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -18,7 +16,6 @@ import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -64,13 +61,13 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             setTitle("Edit Todo");
         }
 
-        todoNameEditText = (EditText) findViewById(R.id.todo_name_edittext);
+        todoNameEditText = (EditText) findViewById(R.id.todo_name_edit_text);
         todoCategorySpinner = (Spinner) findViewById(R.id.todo_category_spinner);
-        todoDateEditText = (EditText) findViewById(R.id.todo_date_edittext);
-        todoTimeEditText = (EditText) findViewById(R.id.todo_time_edittext);
+        todoDateEditText = (EditText) findViewById(R.id.todo_date_edit_text);
+        todoTimeEditText = (EditText) findViewById(R.id.todo_time_edit_text);
         todoAlarmSwitch = (Switch) findViewById(R.id.todo_alarm_switch);
-        todoDescEditText = (EditText) findViewById(R.id.todo_desc_edittext);
-        todoPriorityRatingBar = (RatingBar) findViewById(R.id.todo_priority_ratingbar);
+        todoDescEditText = (EditText) findViewById(R.id.todo_desc_edit_text);
+        todoPriorityRatingBar = (RatingBar) findViewById(R.id.todo_priority_rating_bar);
         submitButton = (Button) findViewById(R.id.todo_submit_button);
 
         categoryList = new ArrayList<>();
@@ -155,14 +152,15 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
     public void onClick(View v) {
         int id = v.getId();
 
-        if(id==R.id.todo_date_edittext){
+        if(id==R.id.todo_date_edit_text){
+//            todoDateEditText.setFocusable(false);
             Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH);
             int date = calendar.get(Calendar.DATE);
             showDatePicker(this,year,month,date);
 
-        }else if(id == R.id.todo_time_edittext){
+        }else if(id == R.id.todo_time_edit_text){
             if((yearTemp==0 || monthTemp == -1 || dateTemp==-1) || todoDateEditText.getText().toString().equals("")){
                 todoDateEditText.setError("Required Field");
                 return;
@@ -181,6 +179,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             }
 
             if(todoDateEditText.getText().toString().equals("")){
+                todoDateEditText.requestFocus();
                 todoDateEditText.setError("Required field");
                 return;
             }
