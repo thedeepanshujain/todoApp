@@ -187,7 +187,6 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
             if(todoTimeEditText.getText().toString().equals("")){
                 setTime(0,0);
             }
-
             caseTodo.setTodoName(name);
 
             int categoryPosition = todoCategorySpinner.getSelectedItemPosition();
@@ -275,6 +274,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
     public void setTime(int hourOfDay, int minute) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(yearTemp,monthTemp,dateTemp,hourOfDay,minute);
+        caseTodo.setTodoDate(calendar.getTime());
         caseTodo.setTodoTime(calendar.getTimeInMillis());
         DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
         String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));
