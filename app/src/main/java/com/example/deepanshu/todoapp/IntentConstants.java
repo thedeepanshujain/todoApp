@@ -8,5 +8,4 @@ public class IntentConstants {
 
     public final static String TODO = "todo";
     public final static String REQ_CODE = "reqCode";
-    public final static String INTENT = "intent";
 }

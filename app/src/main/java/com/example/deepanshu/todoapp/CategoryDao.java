@@ -20,7 +20,4 @@ public interface CategoryDao {
 
     @Insert
     void newCat(Category category);
-
-    @Delete
-    void removeCat(Category category);
 }

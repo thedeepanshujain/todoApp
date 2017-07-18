@@ -37,8 +37,10 @@ public class MainActivity extends AppCompatActivity {
     public final static int ADD_TODO = 0;
     public static Date todayDate;
     public static Date tomDate;
+
     TodoDao todoDao;
     CategoryDao categoryDao;
+
     RecyclerView mTodayRecyclerView;
     RecyclerView mUpComingRecyclerView;
     RecyclerView mDoneRecyclerView;

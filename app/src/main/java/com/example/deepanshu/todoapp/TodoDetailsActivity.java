@@ -153,7 +153,6 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
         int id = v.getId();
 
         if(id==R.id.todo_date_edit_text){
-//            todoDateEditText.setFocusable(false);
             todoDateEditText.setError(null);
             Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
@@ -249,8 +248,6 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                 yearTemp = year;
                 monthTemp = month;
                 dateTemp = dayOfMonth;
-
-                caseTodo.setTodoDate(calendar.getTime());
 
                 DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
                 String dateString = dateFormat.format(caseTodo.getTodoDate());
