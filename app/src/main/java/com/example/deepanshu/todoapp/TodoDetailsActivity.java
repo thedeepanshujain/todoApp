@@ -154,6 +154,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
 
         if(id==R.id.todo_date_edit_text){
 //            todoDateEditText.setFocusable(false);
+            todoDateEditText.setError(null);
             Calendar calendar = Calendar.getInstance();
             int year = calendar.get(Calendar.YEAR);
             int month = calendar.get(Calendar.MONTH);
@@ -275,6 +276,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
     public void setTime(int hourOfDay, int minute) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(yearTemp,monthTemp,dateTemp,hourOfDay,minute);
+        caseTodo.setTodoDate(calendar.getTime());
         caseTodo.setTodoTime(calendar.getTimeInMillis());
         DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
         String timeString = timeFormat.format(new Date(caseTodo.getTodoTime()));

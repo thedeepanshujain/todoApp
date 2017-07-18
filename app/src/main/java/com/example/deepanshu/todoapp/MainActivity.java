@@ -1,6 +1,7 @@
 package com.example.deepanshu.todoapp;
 
 import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.arch.persistence.room.Dao;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -67,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
         boolean isFirstTime = appData.getBoolean("isFirstTime",true);
 
         if(isFirstTime){
-//            SharedPreferences.Editor editor = appData.edit();
             appData.edit().putBoolean("isFirstTime",false).commit();
             Log.i("TAG", "onCreate: " +appData.getBoolean("isFirstTime",true) );
 
@@ -313,8 +313,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateLists() {
-        setTodayDate();
-        setTomDate();
+        setTodayTomDate();
         todoList.clear();
         todayTodoArrayList.clear();
         mTodayRecyclerAdapter.notifyDataSetChanged();
@@ -338,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0;i<todoList.size();i++){
                     Todo currentTodo = todoList.get(i);
                     Date currentTodoDate = currentTodo.getTodoDate();
-                    setAlarm(currentTodo);
 
                     if(currentTodoDate.before(todayDate)){
                         int size = upcomingTodoArrayList.size();
@@ -346,11 +344,13 @@ public class MainActivity extends AppCompatActivity {
                         mDoneRecyclerAdapter.notifyItemInserted(size);
 
                     }else if(currentTodoDate.after(tomDate)){
+                        setAlarm(currentTodo);
                         int size = upcomingTodoArrayList.size();
                         upcomingTodoArrayList.add(currentTodo);
                         mUpcomingRecyclerAdapter.notifyItemInserted(size);
 
                     }else{
+                        setAlarm(currentTodo);
                         int size = todayTodoArrayList.size();
                         todayTodoArrayList.add(currentTodo);
                         mTodayRecyclerAdapter.notifyItemInserted(size);
@@ -362,31 +362,27 @@ public class MainActivity extends AppCompatActivity {
 
     private void setAlarm(Todo todo) {
         //TODO alarms work
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);
+        intent.putExtra(IntentConstants.TODO,todo.getTodoId());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) todo.getTodoId(),intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        alarmManager.set(AlarmManager.RTC_WAKEUP,todo.getTodoTime(),pendingIntent);
     }
 
-    private void setTodayDate() {
+    private void setTodayTomDate() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int date = calendar.get(Calendar.DATE);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int min = calendar.get(Calendar.MINUTE);
 
-        calendar.set(year,month,date,0,0,0);
-
+        calendar.set(year,month,date,hour,min,0);
         todayDate = calendar.getTime();
-    }
-
-    private void setTomDate() {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int date = calendar.get(Calendar.DATE);
-
         calendar.set(year,month,date+1,0,0,0);
-
         tomDate = calendar.getTime();
-
     }
-
 
     private void removeDoneTodo(final int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -398,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("NO", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                mUpcomingRecyclerAdapter.notifyItemChanged(position);
+                mDoneRecyclerAdapter.notifyItemChanged(position);
                 dialog.dismiss();
             }
         });
@@ -678,5 +674,4 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
 }
