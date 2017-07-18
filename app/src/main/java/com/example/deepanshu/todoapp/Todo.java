@@ -1,5 +1,6 @@
 package com.example.deepanshu.todoapp;
 
+import android.app.PendingIntent;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
@@ -39,7 +40,7 @@ public class Todo implements Serializable {
     @ColumnInfo(name = "alarm")
     private boolean mTodoSetAlarm;
 
-// TODO: 16/7/17 done option for todo  
+// TODO: 16/7/17 done option for todo
 //    @ColumnInfo(name = "done")
 //    private boolean mTodoDone;
 
@@ -108,6 +109,7 @@ public class Todo implements Serializable {
     }
 
     public String getIcon() {
-        return String.valueOf(mTodoName.charAt(0)).toUpperCase();
+        return String.valueOf(mTodoName.trim().charAt(0)).toUpperCase();
     }
+
 }

@@ -1,12 +1,5 @@
 <resources>
-    <string name="app_name">TodoApp</string>
+    <string name="app_name">To Be Done</string>
     <string name="action_settings">Settings</string>
-
-    <string-array name="category_spinner">
-        <item> -- Choose category-- </item>
-        <!--<item>Home</item>-->
-        <!--<item>Work</item>-->
-        <!--<item>Others</item>-->
-    </string-array>
 
 </resources>

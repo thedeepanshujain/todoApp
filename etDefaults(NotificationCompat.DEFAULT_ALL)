@@ -1,0 +1,389 @@
+[1mdiff --git a/.idea/dictionaries/deepanshu.xml b/.idea/dictionaries/deepanshu.xml[m
+[1mnew file mode 100644[m
+[1mindex 0000000..624be56[m
+[1m--- /dev/null[m
+[1m+++ b/.idea/dictionaries/deepanshu.xml[m
+[36m@@ -0,0 +1,9 @@[m
+[32m+[m[32m<component name="ProjectDictionaryState">[m
+[32m+[m[32m  <dictionary name="deepanshu">[m
+[32m+[m[32m    <words>[m
+[32m+[m[32m      <w>deepanshu</w>[m
+[32m+[m[32m      <w>todoapp</w>[m
+[32m+[m[32m      <w>todomanager</w>[m
+[32m+[m[32m    </words>[m
+[32m+[m[32m  </dictionary>[m
+[32m+[m[32m</component>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/build.gradle b/app/build.gradle[m
+[1mindex 42232b6..d060973 100644[m
+[1m--- a/app/build.gradle[m
+[1m+++ b/app/build.gradle[m
+[36m@@ -5,7 +5,7 @@[m [mandroid {[m
+     buildToolsVersion "25.0.0"[m
+     defaultConfig {[m
+         applicationId "com.example.deepanshu.todoapp"[m
+[31m-        minSdkVersion 18[m
+[32m+[m[32m        minSdkVersion 19[m
+         targetSdkVersion 25[m
+         versionCode 1[m
+         versionName "1.0"[m
+[36m@@ -17,10 +17,12 @@[m [mandroid {[m
+             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'[m
+         }[m
+     }[m
+[32m+[m[32m    productFlavors {[m
+[32m+[m[32m    }[m
+ }[m
+ [m
+ dependencies {[m
+[31m-    compile fileTree(dir: 'libs', include: ['*.jar'])[m
+[32m+[m[32m    compile fileTree(include: ['*.jar'], dir: 'libs')[m
+     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {[m
+         exclude group: 'com.android.support', module: 'support-annotations'[m
+     })[m
+[36m@@ -28,7 +30,7 @@[m [mdependencies {[m
+     compile 'com.android.support.constraint:constraint-layout:1.0.2'[m
+     compile 'com.android.support:design:25.3.1'[m
+     compile 'com.android.support:cardview-v7:25.3.1'[m
+[31m-    compile "android.arch.persistence.room:runtime:1.0.0-alpha3"[m
+[32m+[m[32m    compile 'android.arch.persistence.room:runtime:1.0.0-alpha3'[m
+     annotationProcessor "android.arch.persistence.room:compiler:1.0.0-alpha3"[m
+     testCompile 'junit:junit:4.12'[m
+ }[m
+[1mdiff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml[m
+[1mindex 9ea7ef8..bd11857 100644[m
+[1m--- a/app/src/main/AndroidManifest.xml[m
+[1m+++ b/app/src/main/AndroidManifest.xml[m
+[36m@@ -2,6 +2,8 @@[m
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"[m
+     package="com.example.deepanshu.todoapp">[m
+ [m
+[32m+[m[32m    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>[m
+[32m+[m
+     <application[m
+         android:allowBackup="true"[m
+         android:icon="@drawable/app_icon"[m
+[36m@@ -24,7 +26,20 @@[m
+         <receiver[m
+             android:name=".AlarmReceiver"[m
+             android:enabled="true"[m
+[31m-            android:exported="true"></receiver>[m
+[32m+[m[32m            android:exported="true" />[m
+[32m+[m[32m        <receiver android:name=".DateReciever">[m
+[32m+[m[32m            <intent-filter>[m
+[32m+[m[32m                <action android:name="android.intent.action.DATE_CHANGED" />[m
+[32m+[m[32m            </intent-filter>[m
+[32m+[m[32m        </receiver>[m
+[32m+[m[32m        <receiver[m
+[32m+[m[32m            android:name=".BootBroadcastReciever"[m
+[32m+[m[32m            android:enabled="true"[m
+[32m+[m[32m            android:exported="true">[m
+[32m+[m[32m            <intent-filter>[m
+[32m+[m[32m                <action android:name="android.intent.action.BOOT_COMPLETED"/>[m
+[32m+[m[32m            </intent-filter>[m
+[32m+[m[32m        </receiver>[m
+     </application>[m
+ [m
+ </manifest>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/AlarmReceiver.java b/app/src/main/java/com/example/deepanshu/todoapp/AlarmReceiver.java[m
+[1mindex 2453cf6..98b8b70 100644[m
+[1m--- a/app/src/main/java/com/example/deepanshu/todoapp/AlarmReceiver.java[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/AlarmReceiver.java[m
+[36m@@ -1,5 +1,6 @@[m
+ package com.example.deepanshu.todoapp;[m
+ [m
+[32m+[m[32mimport android.app.Notification;[m
+ import android.app.NotificationManager;[m
+ import android.app.PendingIntent;[m
+ import android.content.BroadcastReceiver;[m
+[36m@@ -7,56 +8,52 @@[m [mimport android.content.Context;[m
+ import android.content.Intent;[m
+ import android.graphics.Bitmap;[m
+ import android.graphics.BitmapFactory;[m
+[32m+[m[32mimport android.graphics.drawable.BitmapDrawable;[m
+ import android.os.AsyncTask;[m
+ import android.support.v4.app.NotificationCompat;[m
+ [m
+ public class AlarmReceiver extends BroadcastReceiver {[m
+ [m
+[31m-    long todoId;[m
+     Todo caseTodo;[m
+     TodoDao todoDao;[m
+ [m
+     @Override[m
+[31m-    public void onReceive(final Context context, Intent intent) {[m
+[32m+[m[32m    public void onReceive(final Context context, final Intent intent) {[m
+         // TODO: This method is called when the BroadcastReceiver is receiving[m
+[31m-[m
+[31m-        todoId = intent.getLongExtra(IntentConstants.TODO,-1);[m
+[31m-[m
+[32m+[m[32m        // an Intent broadcast.[m
+         TodoDatabase database = TodoDatabase.getInstance(context);[m
+         todoDao = database.todoDao();[m
+ [m
+[31m-        final Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),R.drawable.large_icon);[m
+[32m+[m[32m        final Bitmap large_icon = BitmapFactory.decodeResource(context.getResources(),R.drawable.large_icon_notify);[m
+ [m
+         new AsyncTask<Void,Void,Void>(){[m
+[32m+[m
+             @Override[m
+             protected Void doInBackground(Void... params) {[m
+[31m-                caseTodo = todoDao.getTodoById(todoId);[m
+[32m+[m[32m                caseTodo = todoDao.getTodoById(intent.getLongExtra(IntentConstants.TODO,-1));[m
+                 return null;[m
+             }[m
+ [m
+             @Override[m
+             protected void onPostExecute(Void aVoid) {[m
+                 super.onPostExecute(aVoid);[m
+[32m+[m
+                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context)[m
+[31m-                        .setDefaults(NotificationCompat.DEFAULT_ALL)[m
+[32m+[m[32m                        .setCategory(Notification.CATEGORY_ALARM)[m
+[32m+[m[32m                        .setSmallIcon(R.drawable.alarm_small_icon)[m
+[32m+[m[32m                        .setLargeIcon(large_icon)[m
+                         .setContentTitle(caseTodo.getTodoName())[m
+                         .setContentText(caseTodo.getTodoDesc())[m
+[31m-                        .setDefaults(NotificationCompat.DEFAULT_LIGHTS|NotificationCompat.DEFAULT_SOUND)[m
+[31m-                        .setCategory(NotificationCompat.CATEGORY_ALARM)[m
+[31m-                        .setSmallIcon(R.drawable.small_icon)[m
+[31m-                        .setLargeIcon(bitmap);[m
+[32m+[m[32m                        .setAutoCancel(true)[m
+[32m+[m[32m                        .setDefaults(Notification.DEFAULT_LIGHTS|Notification.DEFAULT_SOUND);[m
+ [m
+                 Intent resultIntent = new Intent(context,MainActivity.class);[m
+[31m-[m
+[31m-                PendingIntent pendingIntent = PendingIntent.getActivity(context, (int) todoId,resultIntent,[m
+[31m-                        PendingIntent.FLAG_CANCEL_CURRENT);[m
+[32m+[m[32m                PendingIntent pendingIntent = PendingIntent.getActivity(context,1,resultIntent,0);[m
+ [m
+                 builder.setContentIntent(pendingIntent);[m
+                 NotificationManager notificationManager = (NotificationManager) context.[m
+                         getSystemService(context.NOTIFICATION_SERVICE);[m
+[31m-[m
+[31m-                notificationManager.notify((int) todoId,builder.build());[m
+[31m-[m
+[32m+[m[32m                notificationManager.notify((int) caseTodo.getTodoId(),builder.build());[m
+             }[m
+         }.execute();[m
+ [m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/BootBroadcastReciever.java b/app/src/main/java/com/example/deepanshu/todoapp/BootBroadcastReciever.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..9375c11[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/BootBroadcastReciever.java[m
+[36m@@ -0,0 +1,15 @@[m
+[32m+[m[32mpackage com.example.deepanshu.todoapp;[m
+[32m+[m
+[32m+[m[32mimport android.content.BroadcastReceiver;[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.content.Intent;[m
+[32m+[m
+[32m+[m[32mpublic class BootBroadcastReciever extends BroadcastReceiver {[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void onReceive(Context context, Intent intent) {[m
+[32m+[m[32m        // TODO: This method is called when the BroadcastReceiver is receiving[m
+[32m+[m[32m        // an Intent broadcast.[m
+[32m+[m[32m        throw new UnsupportedOperationException("Not yet implemented");[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/DateReciever.java b/app/src/main/java/com/example/deepanshu/todoapp/DateReciever.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..17aca1a[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/DateReciever.java[m
+[36m@@ -0,0 +1,16 @@[m
+[32m+[m[32mpackage com.example.deepanshu.todoapp;[m
+[32m+[m
+[32m+[m[32mimport android.content.BroadcastReceiver;[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.content.Intent;[m
+[32m+[m
+[32m+[m[32mpublic class DateReciever extends BroadcastReceiver {[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void onReceive(Context context, Intent intent) {[m
+[32m+[m
+[32m+[m[32m        if(intent.getAction().equals(Intent.ACTION_DATE_CHANGED)){[m
+[32m+[m[32m            // TODO: 18/7/17 handle date change and mainActivity running[m[41m [m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/MainActivity.java b/app/src/main/java/com/example/deepanshu/todoapp/MainActivity.java[m
+[1mindex 69808ea..9010de1 100644[m
+[1m--- a/app/src/main/java/com/example/deepanshu/todoapp/MainActivity.java[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/MainActivity.java[m
+[36m@@ -68,6 +68,7 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+         boolean isFirstTime = appData.getBoolean("isFirstTime",true);[m
+ [m
+         if(isFirstTime){[m
+[32m+[m[32m//            SharedPreferences.Editor editor = appData.edit();[m
+             appData.edit().putBoolean("isFirstTime",false).commit();[m
+             Log.i("TAG", "onCreate: " +appData.getBoolean("isFirstTime",true) );[m
+ [m
+[36m@@ -338,22 +339,25 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+                     Todo currentTodo = todoList.get(i);[m
+                     Date currentTodoDate = currentTodo.getTodoDate();[m
+ [m
+[32m+[m[32m                    Log.i("TAG", "onPostExecute: " + todayDate + " " + currentTodo.getTodoTime());[m
+[32m+[m
+                     if(currentTodoDate.before(todayDate)){[m
+                         int size = upcomingTodoArrayList.size();[m
+                         doneTodoArrayList.add(currentTodo);[m
+                         mDoneRecyclerAdapter.notifyItemInserted(size);[m
+ [m
+                     }else if(currentTodoDate.after(tomDate)){[m
+[31m-                        setAlarm(currentTodo);[m
+                         int size = upcomingTodoArrayList.size();[m
+                         upcomingTodoArrayList.add(currentTodo);[m
+                         mUpcomingRecyclerAdapter.notifyItemInserted(size);[m
+[32m+[m[32m                        setAlarm(currentTodo);[m
+[32m+[m
+ [m
+                     }else{[m
+[31m-                        setAlarm(currentTodo);[m
+                         int size = todayTodoArrayList.size();[m
+                         todayTodoArrayList.add(currentTodo);[m
+                         mTodayRecyclerAdapter.notifyItemInserted(size);[m
+[32m+[m[32m                        setAlarm(currentTodo);[m
+                     }[m
+                 }[m
+             }[m
+[36m@@ -361,12 +365,11 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+     }[m
+ [m
+     private void setAlarm(Todo todo) {[m
+[31m-        //TODO alarms work[m
+[31m-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);[m
+[32m+[m[32m        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);[m
+ [m
+         Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);[m
+         intent.putExtra(IntentConstants.TODO,todo.getTodoId());[m
+[31m-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) todo.getTodoId(),intent,PendingIntent.FLAG_UPDATE_CURRENT);[m
+[32m+[m[32m        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,intent,0);[m
+         alarmManager.set(AlarmManager.RTC_WAKEUP,todo.getTodoTime(),pendingIntent);[m
+     }[m
+ [m
+[36m@@ -377,13 +380,14 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+         int date = calendar.get(Calendar.DATE);[m
+         int hour = calendar.get(Calendar.HOUR_OF_DAY);[m
+         int min = calendar.get(Calendar.MINUTE);[m
+[32m+[m[32m        int sec = calendar.get(Calendar.SECOND);[m
+ [m
+[31m-        calendar.set(year,month,date,hour,min,0);[m
+[32m+[m[32m        calendar.set(year, month, date, hour, min, 0);[m
+         todayDate = calendar.getTime();[m
+[31m-        calendar.set(year,month,date+1,0,0,0);[m
+[32m+[m
+[32m+[m[32m        calendar.set(year, month, date + 1, 0, 0, 0);[m
+         tomDate = calendar.getTime();[m
+     }[m
+[31m-[m
+     private void removeDoneTodo(final int position) {[m
+         AlertDialog.Builder builder = new AlertDialog.Builder(this);[m
+ [m
+[36m@@ -674,4 +678,5 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+ [m
+ [m
+     }[m
+[32m+[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/Todo.java b/app/src/main/java/com/example/deepanshu/todoapp/Todo.java[m
+[1mindex 3b8c4f8..7b197aa 100644[m
+[1m--- a/app/src/main/java/com/example/deepanshu/todoapp/Todo.java[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/Todo.java[m
+[36m@@ -1,6 +1,5 @@[m
+ package com.example.deepanshu.todoapp;[m
+ [m
+[31m-import android.app.PendingIntent;[m
+ import android.arch.persistence.room.ColumnInfo;[m
+ import android.arch.persistence.room.Entity;[m
+ import android.arch.persistence.room.PrimaryKey;[m
+[36m@@ -40,7 +39,7 @@[m [mpublic class Todo implements Serializable {[m
+     @ColumnInfo(name = "alarm")[m
+     private boolean mTodoSetAlarm;[m
+ [m
+[31m-// TODO: 16/7/17 done option for todo[m
+[32m+[m[32m// TODO: 16/7/17 done option for todo[m[41m  [m
+ //    @ColumnInfo(name = "done")[m
+ //    private boolean mTodoDone;[m
+ [m
+[36m@@ -109,7 +108,6 @@[m [mpublic class Todo implements Serializable {[m
+     }[m
+ [m
+     public String getIcon() {[m
+[31m-        return String.valueOf(mTodoName.trim().charAt(0)).toUpperCase();[m
+[32m+[m[32m        return String.valueOf(mTodoName.charAt(0)).toUpperCase();[m
+     }[m
+[31m-[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/deepanshu/todoapp/TodoDetailsActivity.java b/app/src/main/java/com/example/deepanshu/todoapp/TodoDetailsActivity.java[m
+[1mindex c9b801f..5d55953 100644[m
+[1m--- a/app/src/main/java/com/example/deepanshu/todoapp/TodoDetailsActivity.java[m
+[1m+++ b/app/src/main/java/com/example/deepanshu/todoapp/TodoDetailsActivity.java[m
+[36m@@ -154,7 +154,6 @@[m [mpublic class TodoDetailsActivity extends AppCompatActivity implements View.OnCli[m
+ [m
+         if(id==R.id.todo_date_edit_text){[m
+ //            todoDateEditText.setFocusable(false);[m
+[31m-            todoDateEditText.setError(null);[m
+             Calendar calendar = Calendar.getInstance();[m
+             int year = calendar.get(Calendar.YEAR);[m
+             int month = calendar.get(Calendar.MONTH);[m
+[36m@@ -188,7 +187,6 @@[m [mpublic class TodoDetailsActivity extends AppCompatActivity implements View.OnCli[m
+             if(todoTimeEditText.getText().toString().equals("")){[m
+                 setTime(0,0);[m
+             }[m
+[31m-[m
+             caseTodo.setTodoName(name);[m
+ [m
+             int categoryPosition = todoCategorySpinner.getSelectedItemPosition();[m
+[1mdiff --git a/app/src/main/res/drawable/alarm_small_icon.png b/app/src/main/res/drawable/alarm_small_icon.png[m
+[1mnew file mode 100644[m
+[1mindex 0000000..28d9313[m
+Binary files /dev/null and b/app/src/main/res/drawable/alarm_small_icon.png differ
+[1mdiff --git a/app/src/main/res/drawable/large_icon.png b/app/src/main/res/drawable/large_icon.png[m
+[1mdeleted file mode 100644[m
+[1mindex 0134ae9..0000000[m
+Binary files a/app/src/main/res/drawable/large_icon.png and /dev/null differ
+[1mdiff --git a/app/src/main/res/drawable/large_icon_notify.png b/app/src/main/res/drawable/large_icon_notify.png[m
+[1mnew file mode 100644[m
+[1mindex 0000000..0134ae9[m
+Binary files /dev/null and b/app/src/main/res/drawable/large_icon_notify.png differ
+[1mdiff --git a/app/src/main/res/drawable/small_icon.png b/app/src/main/res/drawable/small_icon.png[m
+[1mdeleted file mode 100644[m
+[1mindex 7d2c476..0000000[m
+Binary files a/app/src/main/res/drawable/small_icon.png and /dev/null differ
+[1mdiff --git a/app/src/main/res/layout/activity_todo_details.xml b/app/src/main/res/layout/activity_todo_details.xml[m
+[1mindex 5fcbf96..960bf0e 100644[m
+[1m--- a/app/src/main/res/layout/activity_todo_details.xml[m
+[1m+++ b/app/src/main/res/layout/activity_todo_details.xml[m
+[36m@@ -36,7 +36,7 @@[m
+         android:layout_width="wrap_content"[m
+         android:layout_height="wrap_content"[m
+         android:ems="10"[m
+[31m-        android:inputType="none"[m
+[32m+[m[32m        android:inputType="textPersonName"[m
+         android:hint="DD/MM/YYYY"[m
+         android:focusable="false"[m
+         android:layout_marginTop="18dp"[m
+[1mdiff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml[m
+[1mindex 0bf311e..43724fd 100644[m
+[1m--- a/app/src/main/res/values/strings.xml[m
+[1m+++ b/app/src/main/res/values/strings.xml[m
+[36m@@ -1,5 +1,12 @@[m
+ <resources>[m
+[31m-    <string name="app_name">To Be Done</string>[m
+[32m+[m[32m    <string name="app_name">TodoApp</string>[m
+     <string name="action_settings">Settings</string>[m
+ [m
+[32m+[m[32m    <string-array name="category_spinner">[m
+[32m+[m[32m        <item> -- Choose category-- </item>[m
+[32m+[m[32m        <!--<item>Home</item>-->[m
+[32m+[m[32m        <!--<item>Work</item>-->[m
+[32m+[m[32m        <!--<item>Others</item>-->[m
+[32m+[m[32m    </string-array>[m
+[32m+[m
+ </resources>[m

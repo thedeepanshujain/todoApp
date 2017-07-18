@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
         boolean isFirstTime = appData.getBoolean("isFirstTime",true);
 
         if(isFirstTime){
-//            SharedPreferences.Editor editor = appData.edit();
             appData.edit().putBoolean("isFirstTime",false).commit();
             Log.i("TAG", "onCreate: " +appData.getBoolean("isFirstTime",true) );
 
@@ -338,8 +337,11 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0;i<todoList.size();i++){
                     Todo currentTodo = todoList.get(i);
                     Date currentTodoDate = currentTodo.getTodoDate();
+<<<<<<< HEAD
 
                     Log.i("TAG", "onPostExecute: " + todayDate + " " + currentTodo.getTodoTime());
+=======
+>>>>>>> broadcasts
 
                     if(currentTodoDate.before(todayDate)){
                         int size = upcomingTodoArrayList.size();
@@ -347,6 +349,7 @@ public class MainActivity extends AppCompatActivity {
                         mDoneRecyclerAdapter.notifyItemInserted(size);
 
                     }else if(currentTodoDate.after(tomDate)){
+                        setAlarm(currentTodo);
                         int size = upcomingTodoArrayList.size();
                         upcomingTodoArrayList.add(currentTodo);
                         mUpcomingRecyclerAdapter.notifyItemInserted(size);
@@ -354,6 +357,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                     }else{
+                        setAlarm(currentTodo);
                         int size = todayTodoArrayList.size();
                         todayTodoArrayList.add(currentTodo);
                         mTodayRecyclerAdapter.notifyItemInserted(size);
@@ -365,11 +369,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setAlarm(Todo todo) {
+<<<<<<< HEAD
         AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);
         intent.putExtra(IntentConstants.TODO,todo.getTodoId());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,intent,0);
+=======
+        //TODO alarms work
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);
+        intent.putExtra(IntentConstants.TODO,todo.getTodoId());
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) todo.getTodoId(),intent,PendingIntent.FLAG_UPDATE_CURRENT);
+>>>>>>> broadcasts
         alarmManager.set(AlarmManager.RTC_WAKEUP,todo.getTodoTime(),pendingIntent);
     }
 
@@ -380,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
         int date = calendar.get(Calendar.DATE);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int min = calendar.get(Calendar.MINUTE);
+<<<<<<< HEAD
         int sec = calendar.get(Calendar.SECOND);
 
         calendar.set(year, month, date, hour, min, 0);
@@ -388,6 +402,15 @@ public class MainActivity extends AppCompatActivity {
         calendar.set(year, month, date + 1, 0, 0, 0);
         tomDate = calendar.getTime();
     }
+=======
+
+        calendar.set(year,month,date,hour,min,0);
+        todayDate = calendar.getTime();
+        calendar.set(year,month,date+1,0,0,0);
+        tomDate = calendar.getTime();
+    }
+
+>>>>>>> broadcasts
     private void removeDoneTodo(final int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -678,5 +701,4 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
 }
