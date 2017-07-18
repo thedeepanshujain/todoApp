@@ -2,7 +2,6 @@ package com.example.deepanshu.todoapp;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.arch.persistence.room.Dao;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatRatingBar;
@@ -25,10 +23,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
-import android.widget.RatingBar;
 import android.widget.TextView;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(isFirstTime){
             appData.edit().putBoolean("isFirstTime",false).commit();
-            Log.i("TAG", "onCreate: " +appData.getBoolean("isFirstTime",true) );
 
             TodoDatabase database = TodoDatabase.getInstance(this);
             categoryDao = database.categoryDao();
@@ -81,13 +75,7 @@ public class MainActivity extends AppCompatActivity {
                     categoryDao.newCat(new Category(DbConstants.CATEGORY_WORK));
                     categoryDao.newCat(new Category(DbConstants.CATEGORY_OTHERS));
                     // TODO: 16/7/17 custom category work
-                    //dao.newCat("Custom");
                     return null;
-                }
-
-                @Override
-                protected void onPostExecute(Void aVoid) {
-                    super.onPostExecute(aVoid);
                 }
             }.execute();
         }
@@ -114,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         mTodayRecyclerAdapter = new RecyclerAdapter(this, todayTodoArrayList, new ItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                showDialog(todayTodoArrayList.get(position));
+                editTodayTodo(position);
             }
 
             @Override
@@ -126,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         mUpcomingRecyclerAdapter = new RecyclerAdapter(this, upcomingTodoArrayList, new ItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                showDialog(upcomingTodoArrayList.get(position));
+                editUpcomingTodo(position);
             }
 
             @Override
@@ -137,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         mDoneRecyclerAdapter = new RecyclerAdapter(this, doneTodoArrayList, new ItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                showDialog(doneTodoArrayList.get(position));
+                editDoneTodo(position);
             }
 
             @Override
@@ -225,62 +213,8 @@ public class MainActivity extends AppCompatActivity {
         updateLists();
     }
 
-    private void showDialog(final Todo todo) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        builder.setTitle(todo.getTodoName());
-        builder.setCancelable(false);
-
-        View view = getLayoutInflater().inflate(R.layout.dailog_view,null);
-        TextView dialogCat = (TextView) view.findViewById(R.id.dialog_category);
-        TextView dialogDesc = (TextView) view.findViewById(R.id.dialog_desc);
-        TextView dialogDate = (TextView) view.findViewById(R.id.dialog_date);
-        TextView dialogTime = (TextView) view.findViewById(R.id.dialog_time);
-        AppCompatRatingBar dialogPriority = (AppCompatRatingBar) view.findViewById(R.id.dialog_priority);
-        SwitchCompat dialogSwitch = (SwitchCompat) view.findViewById(R.id.dialog_alarm);
-
-        dialogCat.setText("    "+todo.getTodoCategory().getCategory());
-        dialogDesc.setText(todo.getTodoDesc());
-
-        DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-        String dateString = dateFormat.format(todo.getTodoDate());
-        dialogDate.setText(dateString);
-
-        DateFormat timeFormat = new SimpleDateFormat("hh:mm a");
-        String timeString = timeFormat.format(new Date(todo.getTodoTime()));
-        dialogTime.setText(timeString);
-
-        dialogPriority.setRating(todo.getTodoPriority());
-        dialogSwitch.setChecked(todo.isTodoSetAlarm());
-
-        builder.setView(view);
-
-        builder.setPositiveButton("DONE", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-
-        builder.setNegativeButton("EDIT", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Intent intent = new Intent(MainActivity.this,TodoDetailsActivity.class);
-                intent.putExtra(IntentConstants.REQ_CODE,EDIT_TODO);
-                intent.putExtra(IntentConstants.TODO,todo.getTodoId());
-                startActivityForResult(intent,EDIT_TODO);
-            }
-        });
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
-
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -337,52 +271,55 @@ public class MainActivity extends AppCompatActivity {
                 for(int i=0;i<todoList.size();i++){
                     Todo currentTodo = todoList.get(i);
                     Date currentTodoDate = currentTodo.getTodoDate();
-<<<<<<< HEAD
-
-                    Log.i("TAG", "onPostExecute: " + todayDate + " " + currentTodo.getTodoTime());
-=======
->>>>>>> broadcasts
 
                     if(currentTodoDate.before(todayDate)){
+                        cancelAlarm(currentTodo);
                         int size = upcomingTodoArrayList.size();
                         doneTodoArrayList.add(currentTodo);
                         mDoneRecyclerAdapter.notifyItemInserted(size);
 
                     }else if(currentTodoDate.after(tomDate)){
-                        setAlarm(currentTodo);
+                        if(currentTodo.isTodoSetAlarm()) {
+                            setAlarm(currentTodo);
+                        }else{
+                            cancelAlarm(currentTodo);
+                        }
                         int size = upcomingTodoArrayList.size();
                         upcomingTodoArrayList.add(currentTodo);
                         mUpcomingRecyclerAdapter.notifyItemInserted(size);
-                        setAlarm(currentTodo);
-
 
                     }else{
-                        setAlarm(currentTodo);
+                        if(currentTodo.isTodoSetAlarm()) {
+                            setAlarm(currentTodo);
+                        }else{
+                            cancelAlarm(currentTodo);
+                        }
                         int size = todayTodoArrayList.size();
                         todayTodoArrayList.add(currentTodo);
                         mTodayRecyclerAdapter.notifyItemInserted(size);
-                        setAlarm(currentTodo);
                     }
                 }
             }
         }.execute();
     }
 
-    private void setAlarm(Todo todo) {
-<<<<<<< HEAD
-        AlarmManager alarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+    private void cancelAlarm(Todo todo) {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);
         intent.putExtra(IntentConstants.TODO,todo.getTodoId());
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this,1,intent,0);
-=======
-        //TODO alarms work
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) todo.getTodoId(),intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        alarmManager.cancel(pendingIntent);
+    }
+
+    private void setAlarm(Todo todo) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         Intent intent = new Intent(MainActivity.this,AlarmReceiver.class);
         intent.putExtra(IntentConstants.TODO,todo.getTodoId());
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) todo.getTodoId(),intent,PendingIntent.FLAG_UPDATE_CURRENT);
->>>>>>> broadcasts
         alarmManager.set(AlarmManager.RTC_WAKEUP,todo.getTodoTime(),pendingIntent);
     }
 
@@ -393,16 +330,6 @@ public class MainActivity extends AppCompatActivity {
         int date = calendar.get(Calendar.DATE);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int min = calendar.get(Calendar.MINUTE);
-<<<<<<< HEAD
-        int sec = calendar.get(Calendar.SECOND);
-
-        calendar.set(year, month, date, hour, min, 0);
-        todayDate = calendar.getTime();
-
-        calendar.set(year, month, date + 1, 0, 0, 0);
-        tomDate = calendar.getTime();
-    }
-=======
 
         calendar.set(year,month,date,hour,min,0);
         todayDate = calendar.getTime();
@@ -410,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
         tomDate = calendar.getTime();
     }
 
->>>>>>> broadcasts
     private void removeDoneTodo(final int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
