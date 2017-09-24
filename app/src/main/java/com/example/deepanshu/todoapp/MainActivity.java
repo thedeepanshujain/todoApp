@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             }.execute();
         }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,9 +92,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mTodayRecyclerView = (RecyclerView) findViewById(R.id.today_recycler_view);
-        mUpComingRecyclerView = (RecyclerView) findViewById(R.id.upcoming_recycler_view);
-        mDoneRecyclerView = (RecyclerView) findViewById(R.id.done_recycler_view);
+        mTodayRecyclerView = findViewById(R.id.today_recycler_view);
+        mUpComingRecyclerView = findViewById(R.id.upcoming_recycler_view);
+        mDoneRecyclerView = findViewById(R.id.done_recycler_view);
 
         todoList = new ArrayList<>();
         todayTodoArrayList = new ArrayList<>();

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -16,6 +17,7 @@ import android.widget.RatingBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -40,6 +42,7 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
     private int yearTemp = 0;
     private int monthTemp = -1;
     private int dateTemp = -1;
+    Date today = Calendar.getInstance().getTime();
 
     EditText todoNameEditText;
     Spinner todoCategorySpinner;
@@ -250,8 +253,12 @@ public class TodoDetailsActivity extends AppCompatActivity implements View.OnCli
                 dateTemp = dayOfMonth;
 
                 DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy");
-                String dateString = dateFormat.format(caseTodo.getTodoDate());
-
+                Date selectedDate = calendar.getTime();
+                if(selectedDate.before(today)){
+                    Toast.makeText(TodoDetailsActivity.this,"Invalid Date",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String dateString = dateFormat.format(selectedDate);
                 todoDateEditText.setText(dateString);
             }
         }, initialYear, initialMonth, initialDate);
